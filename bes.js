@@ -1,3 +1,7 @@
+let midiAccess;
+let midiOutput;
+let midiData;
+
 document.getElementById('midiFile').addEventListener('change', function(event) {
     const file = event.target.files[0];
     if (!file) {
@@ -12,9 +16,22 @@ document.getElementById('midiFile').addEventListener('change', function(event) {
     reader.readAsArrayBuffer(file);
 });
 
-let midiData;
-let audioContext;
-let playButton = document.getElementById('playButton');
+navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+
+function onMIDISuccess(midiAccessInstance) {
+    midiAccess = midiAccessInstance;
+    midiOutput = Array.from(midiAccess.outputs.values())[0];  // Select port 0
+
+    if (midiOutput) {
+        playButton.disabled = false;
+    } else {
+        console.log('No MIDI output devices found.');
+    }
+}
+
+function onMIDIFailure() {
+    console.log('Could not access your MIDI devices.');
+}
 
 function parseMidi(arrayBuffer) {
     midiData = new DataView(arrayBuffer);
@@ -40,36 +57,30 @@ function parseMidi(arrayBuffer) {
         const track = readChunk();
         tracks.push(track);
     }
-
-    playButton.disabled = false;
 }
 
 playButton.addEventListener('click', function() {
-    if (audioContext) {
-        audioContext.close();
-    }
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
     playMidi();
 });
 
 function playMidi() {
-    // Simple MIDI playback demo. Real playback would involve more complexity.
-    const now = audioContext.currentTime;
+    const now = performance.now();
+    let offset = 0;
 
-    for (let i = 0; i < midiData.byteLength; i++) {
-        const type = midiData.getUint8(i);
-
-        if (type === 0x90) {  // Note on
-            const note = midiData.getUint8(i + 1);
-            const velocity = midiData.getUint8(i + 2);
+    function readChunk() {
+        const type = midiData.getUint8(offset);
+        if ((type & 0xf0) === 0x90) {  // Note on
+            const note = midiData.getUint8(offset + 1);
+            const velocity = midiData.getUint8(offset + 2);
 
             if (velocity > 0) {
-                const osc = audioContext.createOscillator();
-                osc.frequency.value = 440 * Math.pow(2, (note - 69) / 12);
-                osc.connect(audioContext.destination);
-                osc.start(now);
-                osc.stop(now + 0.5);  // Play for 0.5 seconds
+                midiOutput.send([0x90, note, velocity], now + offset * 100);
             }
         }
+        offset += 3;
+    }
+
+    while (offset < midiData.byteLength) {
+        readChunk();
     }
 }
