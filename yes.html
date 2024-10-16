@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 95 Emulator</title>
+</head>
+<body>
+    <div id="emulator-container" style="width: 800px; height: 600px; border: 1px solid #000;"></div>
+
+    <script src="https://copy.sh/v86/build/v86.js"></script>
+    <script>
+        var emulator = new V86Starter({
+            wasm_path: "https://copy.sh/v86/build/v86.wasm",
+            memory_size: 64 * 1024 * 1024, // 64 MB of RAM
+            vga_memory_size: 2 * 1024 * 1024,
+            screen_container: document.getElementById("emulator-container"),
+            bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
+            vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
+            
+            // Load the Windows 95C ISO as a CD-ROM drive
+            cdrom: { url: "windowsbootdisc.iso" }, 
+
+            // Create a blank hard drive image in memory (approx. 500MB for Windows 95 installation)
+            hda: {
+                buffer: new Uint8Array(4096 * 1024 * 1024)
+            },
+            
+            // Optional: Enables faster booting (initializing from the first disk by default)
+            autostart: true
+        });
+    </script>
+</body>
+</html>
