@@ -3,26 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Windows 95 Emulator</title>
+    <title>MIDI Parser</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="dos-container" style="width: 640px; height: 480px; border: 1px solid #000;"></div>
-    
-    <!-- Load the js-dos library from a CDN -->
-    <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-    
-    <script>
-        // Initialize the emulator
-        Dos(document.getElementById("dos-container")).ready((fs, main) => {
-            // Specify the path to your Windows 95 ISO file
-            fs.extract("windows95.iso").then(() => {
-                // Boot the emulator from the ISO and set up a 4 GB hard drive
-                main([
-                    "-c", "IMGMOUNT C . -size 512,63,16,8192", // 4096 MB or 4 GB with appropriate geometry
-                    "-c", "BOOT windows95.iso"
-                ]);
-            });
-        });
-    </script>
+    <h1>MIDI Parser</h1>
+    <input type="file" id="midiFile" accept=".mid,.midi">
+    <pre id="output"></pre>
+    <script src="bes.js"></script>
 </body>
 </html>
