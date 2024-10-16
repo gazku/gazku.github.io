@@ -41,19 +41,7 @@ function parseMidi(arrayBuffer) {
         tracks.push(track);
     }
 
-    displayMidiInfo(header, tracks);
     playButton.disabled = false;
-}
-
-function displayMidiInfo(header, tracks) {
-    const output = document.getElementById('output');
-    output.textContent = `Header Chunk:
-    ID: ${header.id}
-    Length: ${header.length}
-
-Tracks:
-    ${tracks.map((track, i) => `Track ${i + 1} - ID: ${track.id}, Length: ${track.length}`).join('\n')}
-    `;
 }
 
 playButton.addEventListener('click', function() {
@@ -67,12 +55,21 @@ playButton.addEventListener('click', function() {
 function playMidi() {
     // Simple MIDI playback demo. Real playback would involve more complexity.
     const now = audioContext.currentTime;
-    const duration = 1.0;  // 1 second for demonstration
-    const osc = audioContext.createOscillator();
 
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(440, now); // A4 note
-    osc.connect(audioContext.destination);
-    osc.start(now);
-    osc.stop(now + duration);
+    for (let i = 0; i < midiData.byteLength; i++) {
+        const type = midiData.getUint8(i);
+
+        if (type === 0x90) {  // Note on
+            const note = midiData.getUint8(i + 1);
+            const velocity = midiData.getUint8(i + 2);
+
+            if (velocity > 0) {
+                const osc = audioContext.createOscillator();
+                osc.frequency.value = 440 * Math.pow(2, (note - 69) / 12);
+                osc.connect(audioContext.destination);
+                osc.start(now);
+                osc.stop(now + 0.5);  // Play for 0.5 seconds
+            }
+        }
+    }
 }
