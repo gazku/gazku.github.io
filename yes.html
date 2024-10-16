@@ -6,28 +6,22 @@
     <title>Windows 95 Emulator</title>
 </head>
 <body>
-    <div id="emulator-container" style="width: 800px; height: 600px; border: 1px solid #000;"></div>
-
-    <script src="https://copy.sh/v86/build/v86.js"></script>
+    <div id="dos-container" style="width: 640px; height: 480px; border: 1px solid #000;"></div>
+    
+    <!-- Load the js-dos library from a CDN -->
+    <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+    
     <script>
-        var emulator = new V86Starter({
-            wasm_path: "https://copy.sh/v86/build/v86.wasm",
-            memory_size: 64 * 1024 * 1024, // 64 MB of RAM
-            vga_memory_size: 2 * 1024 * 1024,
-            screen_container: document.getElementById("emulator-container"),
-            bios: { url: "https://copy.sh/v86/bios/seabios.bin" },
-            vga_bios: { url: "https://copy.sh/v86/bios/vgabios.bin" },
-            
-            // Load the Windows 95C ISO as a CD-ROM drive
-            cdrom: { url: "windowsbootdisc.iso" }, 
-
-            // Create a blank hard drive image in memory (approx. 500MB for Windows 95 installation)
-            hda: {
-                buffer: new Uint8Array(4096 * 1024 * 1024)
-            },
-            
-            // Optional: Enables faster booting (initializing from the first disk by default)
-            autostart: true
+        // Initialize the emulator
+        Dos(document.getElementById("dos-container")).ready((fs, main) => {
+            // Specify the path to your Windows 95 ISO file
+            fs.extract("windows95.iso").then(() => {
+                // Boot the emulator from the ISO and set up a 4 GB hard drive
+                main([
+                    "-c", "IMGMOUNT C . -size 512,63,16,8192", // 4096 MB or 4 GB with appropriate geometry
+                    "-c", "BOOT windows95.iso"
+                ]);
+            });
         });
     </script>
 </body>
